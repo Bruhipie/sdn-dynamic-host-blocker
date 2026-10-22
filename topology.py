@@ -7,6 +7,7 @@ import argparse
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.node import OVSSwitch, DefaultController
+from mininet.link import TCLink
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
@@ -14,14 +15,20 @@ from mininet.log import setLogLevel, info
 class SDNBlockerTopo(Topo):
     def build(self):
         s1 = self.addSwitch("s1", cls=OVSSwitch)
-        for i in range(1, 5):
-            h = self.addHost(f"h{i}", ip=f"10.0.0.{i}/24")
-            self.addLink(h, s1)
+        hosts_config = [
+            ("h1", "10.0.0.1/24", "00:00:00:00:00:01"),
+            ("h2", "10.0.0.2/24", "00:00:00:00:00:02"),
+            ("h3", "10.0.0.3/24", "00:00:00:00:00:03"),
+            ("h4", "10.0.0.4/24", "00:00:00:00:00:04"),
+        ]
+        for name, ip, mac in hosts_config:
+            host = self.addHost(name, ip=ip, mac=mac)
+            self.addLink(host, s1)
 
 
 def run_topology():
     topo = SDNBlockerTopo()
-    net = Mininet(topo=topo, switch=OVSSwitch, controller=DefaultController)
+    net = Mininet(topo=topo, switch=OVSSwitch, controller=DefaultController, link=TCLink, autoStaticArp=True)
     net.start()
     CLI(net)
     net.stop()
